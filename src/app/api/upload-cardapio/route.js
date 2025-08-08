@@ -3,9 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SECRET_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
+// LISTAR arquivos PDF (GET)
 export async function GET() {
   try {
     const { data, error } = await supabase.storage
@@ -21,6 +22,7 @@ export async function GET() {
   }
 }
 
+// UPLOAD do cardápio (POST)
 export async function POST(request) {
   try {
     const formData = await request.formData()
@@ -28,14 +30,11 @@ export async function POST(request) {
 
     if (!file) return NextResponse.json({ error: 'Arquivo não enviado' }, { status: 400 })
 
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
     const fileName = `cardapio_${Date.now()}.pdf`
 
     const { error } = await supabase.storage
       .from('arquivos')
-      .upload(fileName, buffer, { contentType: file.type, upsert: true })
+      .upload(fileName, file, { contentType: file.type, upsert: true })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -45,6 +44,7 @@ export async function POST(request) {
   }
 }
 
+// DELETAR arquivo (DELETE)
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url)
